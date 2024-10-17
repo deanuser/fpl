@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Highcharts Line Charts Example</title>
+    <!-- Include Highcharts library -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <!-- Optional: Include Highcharts exporting module -->
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <style>
+        /* Style for the chart containers */
+        .chart-container {
+            width: 90%;
+            height: 600px;
+            margin: 50px auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        h2 {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Performance Over Game Weeks</h2>
+    <div id="performance-container" class="chart-container"></div>
+
+    <h2>Position Change Over Game Weeks</h2>
+    <div id="position-container" class="chart-container"></div>
+
+    <script>
+        // Define the categories for the x-axis
+        const categories = ['GW1', 'GW2', 'GW3', 'GW4', 'GW5', 'GW6', 'GW7'];
+
+        // Define the raw data for each person
+        const rawData = [
+            { name: 'Dean', data: [75, 154, 243, 291, 371, 417, 472] },
+            { name: 'Andy', data: [70, 145, 225, 269, 348, 397, 462] },
+            { name: 'Dan', data: [44, 149, 222, 277, 334, 410, 449] },
+            { name: 'Tony', data: [53, 117, 186, 259, 324, 386, 438] },
+            { name: 'John', data: [72, 142, 215, 277, 333, 397, 432] },
+            { name: 'Matt', data: [56, 137, 219, 252, 330, 392, 428] },
+            { name: 'Rob', data: [59, 123, 193, 246, 329, 372, 428] },
+            { name: 'Geoff', data: [67, 139, 172, 228, 292, 381, 423] },
+            { name: 'Rafer', data: [59, 125, 178, 202, 259, 323, 404] },
+            { name: 'Dave', data: [65, 126, 169, 212, 272, 328, 396] },
+            { name: 'Bill', data: [60, 132, 174, 227, 265, 305, 356] }
+        ];
+
+        /**
+         * Function to compute rankings for each person per game week.
+         * @param {Array} data - Array of person objects with name and data.
+         * @param {Array} categories - Array of game week labels.
+         * @returns {Array} - Array of person objects with name and ranking data.
+         */
+        function computeRankings(data, categories) {
+            const rankings = data.map(person => ({ name: person.name, data: [] }));
+
+            categories.forEach((gw, index) => {
+                // Extract the value for each person for the current game week
+                const gwValues = data.map(person => ({
+                    name: person.name,
+                    value: person.data[index]
+                }));
+
+                // Sort descending to assign ranks (1 is highest)
+                gwValues.sort((a, b) => b.value - a.value);
+
+                // Assign ranks, handling ties
+                let currentRank = 1;
+                let previousValue = null;
+                let skipRank = 0;
+
+                gwValues.forEach((item, idx) => {
+                    if (item.value !== previousValue) {
+                        currentRank = idx + 1;
+                        previousValue = item.value;
+                        skipRank = 1;
+                    } else {
+                        skipRank += 1;
+                    }
+
+                    // Find the corresponding person and assign the rank
+                    const person = rankings.find(p => p.name === item.name);
+                    person.data.push(currentRank);
+                });
+            });
+
+            return rankings;
+        }
+
+        // Compute the ranking data
+        const rankingData = computeRankings(rawData, categories);
+
+        // Initialize the Performance Over Game Weeks chart
+        Highcharts.chart('performance-container', {
+            chart: {
+                type: 'line'
+            },
+            title: {
+                text: 'Performance Over Game Weeks'
+            },
+            subtitle: {
+                text: 'Visualizing Individual Performance Using Highcharts JS'
+            },
+            xAxis: {
+                categories: categories,
+                title: {
+                    text: 'Game Weeks'
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Values'
+                },
+                allowDecimals: false
+            },
+            tooltip: {
+                shared: true,
+                valueSuffix: ''
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+            series: rawData,
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 800
+                    },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
+                }]
+            }
+        });
+
+        // Initialize the Position Change Over Game Weeks chart
+        Highcharts.chart('position-container', {
+            chart: {
+                type: 'line'
+            },
+            title: {
+                text: 'Position Change Over Game Weeks'
+            },
+            subtitle: {
+                text: 'Ranking of Individuals Per Game Week'
+            },
+            xAxis: {
+                categories: categories,
+                title: {
+                    text: 'Game Weeks'
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Position'
+                },
+                reversed: true, // So that rank 1 is at the top
+                allowDecimals: false,
+                min: 1,
+                max: rawData.length,
+                tickInterval: 1
+            },
+            tooltip: {
+                shared: true,
+                valueSuffix: ''
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+            series: rankingData,
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 800
+                    },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
+                }]
+            }
+        });
+    </script>
+
+</body>
+</html>
